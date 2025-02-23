@@ -18,7 +18,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://gpt-front-ashy.vercel.app"
+
 ]
 
 app.add_middleware(  
@@ -43,7 +43,7 @@ user_models = {}
 # Функция для генерации текста
 def ask_gpt(prompt: str, user_id: str) -> str:
     system_message = {"role": "system", "content": "Пожалуйста, отвечай на русском языке, грамотно."}
-    model = user_models.get(user_id, "gpt-4o-mini")  # Используем модель по умолчанию, если нет выбора
+    model = user_models.get(user_id, "gpt-4o")  # Используем модель по умолчанию, если нет выбора
     
     try:
         response = g4f.ChatCompletion.create(
