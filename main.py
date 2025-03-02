@@ -64,7 +64,7 @@ def generate_image(prompt: str, model: str) -> str:
 
 # Универсальный эндпоинт для генерации контента
 @app.post("/generate/")
-async def generate(prompt: str, model: str, user_id: str):
+async def generate(prompt: str, model: str):
     if model not in available_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
     
@@ -76,3 +76,4 @@ async def generate(prompt: str, model: str, user_id: str):
         return {"image_url": result}
     else:
         raise HTTPException(status_code=400, detail="Ошибка выбора модели")
+
