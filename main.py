@@ -9,6 +9,7 @@ from io import BytesIO
 from docx import Document
 from fastapi.middleware.cors import CORSMiddleware
 
+# Инициализация FastAPI
 app = FastAPI()
 
 origins = [
@@ -25,16 +26,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
+# Доступные модели
 available_models = ["gpt-4o", "gpt-4o-mini", "deepseek-r1", "deepseek-v3", "evil", "flux", "dall-e-3", "midjourney"]
 image_models = ["flux", "dall-e-3", "midjourney"]
 text_models = [model for model in available_models if model not in image_models]
+
+# Хранение выбранных моделей для пользователей
 user_models = {}
 
+BASE_URL = "https://fastapi-production-c93c.up.railway.app"
 
-def ask_gpt(prompt: str, model: str) -> str:
+# Функция для генерации текста
+def ask_gpt(prompt: str, user_id: str) -> str:
     system_message = {"role": "system", "content": "Пожалуйста, отвечай на русском языке, грамотно."}
+    model = user_models.get(user_id, "gpt-4o")
+    
     try:
         response = g4f.ChatCompletion.create(
             model=model,
@@ -51,52 +60,52 @@ def ask_gpt(prompt: str, model: str) -> str:
         logging.error(f"Ошибка при использовании GPT: {str(e)}")
         return "Не удалось получить ответ от GPT."
 
+# Форматирование ответов
+def format_answer(answer: str) -> str:
+    formatted_answer = answer
+    formatted_answer = re.sub(r'```.*?\n', r'```', formatted_answer, flags=re.DOTALL)
+    formatted_answer = re.sub(r'```(.*?)```', r'\1', formatted_answer, flags=re.DOTALL)
+    formatted_answer = re.sub(r'#+\s*(.*)', r'\1', formatted_answer)
+    formatted_answer = re.sub(r'\*\*(.*?)\*\*', r'\1', formatted_answer)
+    formatted_answer = re.sub(r'`(.*?)`', r'\1', formatted_answer)
+    return formatted_answer
 
-def gen_img(prompt: str, model: str) -> str:
-    try:
-        client = Client()
-        response = client.images.generate(
-            model=model,
-            prompt=prompt,
-            seed=random.randint(0, 10**9),
-            response_format="url"
-        )
-        image_url = response.data[0].url
-        logging.info(f"Изображение сгенерировано: {image_url}")
-        return image_url
-    except Exception as e:
-        logging.error(f"Ошибка генерации изображения: {str(e)}")
-        return f"Ошибка при генерации: {str(e)}"
-
-
-@app.post("/generate/")
-async def generate(url: str, method: str, prompt: str, model: str, user_id: str):
-    user_models[user_id] = model  # Запоминаем модель для пользователя
+# Эндпоинт для генерации текста
+@app.post("/generate_text/")
+async def generate_text(prompt: str, user_id: str):
+    model = user_models.get(user_id, "gpt-4o-mini")
+    if model in image_models:
+        raise HTTPException(status_code=400, detail="Выбрана модель для генерации изображений. Пожалуйста, выберите текстовую модель.")
     
-    if method.lower() == "text":
-        if model not in text_models:
-            raise HTTPException(status_code=400, detail="Выбрана неверная модель для генерации текста.")
-        response = ask_gpt(prompt, model)
-        return {"url": url, "method": method, "response": response, "model": model, "user_id": user_id}
-    
-    elif method.lower() == "image":
-        if model not in image_models:
-            raise HTTPException(status_code=400, detail="Выбрана неверная модель для генерации изображений.")
-        image_url = gen_img(prompt, model)
-        return {"url": url, "method": method, "image_url": image_url, "model": model, "user_id": user_id}
-    
-    else:
-        raise HTTPException(status_code=400, detail="Некорректный метод запроса.")
+    response = ask_gpt(prompt, user_id)
+    formatted_response = format_answer(response)
+    return {"url": f"{BASE_URL}/generate_text/", "method": "POST", "prompt": prompt, "model": model, "user_id": user_id, "response": formatted_response}
 
+# Эндпоинт для генерации изображений
+@app.post("/generate_image/")
+async def generate_image(prompt: str, user_id: str):
+    model = user_models.get(user_id)
+    if model not in image_models:
+        raise HTTPException(status_code=400, detail="Выбрана текстовая модель. Пожалуйста, выберите модель для генерации изображений.")
+    
+    image_url = gen_img(prompt, user_id)
+    return {"url": f"{BASE_URL}/generate_image/", "method": "POST", "prompt": prompt, "model": model, "user_id": user_id, "image_url": image_url}
 
+# Эндпоинт для установки модели
 @app.post("/set_model/")
 async def set_model(user_id: str, model: str):
     if model not in available_models:
         raise HTTPException(status_code=400, detail="Недопустимая модель")
+    
     user_models[user_id] = model
-    return {"status": "success", "message": f"Модель {model} установлена!"}
+    return {"url": f"{BASE_URL}/set_model/", "method": "POST", "model": model, "user_id": user_id, "status": "success", "message": f"Модель {model} установлена!"}
 
-
+# Корневой эндпоинт
 @app.get("/")
 async def root():
     return {"message": "Добро пожаловать в GPT Backend!"}
+
+# Эндпоинт для документации
+@app.get("/docs")
+async def docs():
+    return JSONResponse(content={"message": "Документация доступна по адресу /openapi.json yea"})
