@@ -29,7 +29,7 @@ available_models = ["gpt-4o", "gpt-4o-mini", "deepseek-r1", "deepseek-v3", "evil
 image_models = ["flux", "dall-e-3", "midjourney"]
 text_models = [model for model in available_models if model not in image_models]
 
-# Функция генерации текста
+# Генерация текста
 def generate_text(prompt: str, model: str) -> str:
     system_message = {"role": "system", "content": "Пожалуйста, отвечай на русском языке, грамотно."}
     try:
@@ -47,7 +47,7 @@ def generate_text(prompt: str, model: str) -> str:
         logging.error(f"Ошибка генерации текста: {str(e)}")
         return "Не удалось получить ответ."
 
-# Функция генерации изображений
+# Генерация изображения
 def generate_image(prompt: str, model: str) -> str:
     try:
         client = Client()
@@ -62,18 +62,30 @@ def generate_image(prompt: str, model: str) -> str:
         logging.error(f"Ошибка генерации изображения: {str(e)}")
         return "Ошибка генерации изображения."
 
-# Универсальный эндпоинт для генерации контента
+# Эндпоинт генерации контента
 @app.post("/generate/")
-async def generate(prompt: str, model: str):
+async def generate(prompt: str, model: str, smart_prompt: bool = False):
     if model not in available_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
-    
+
+    # Если модель текстовая — просто вернуть ответ
     if model in text_models:
         result = generate_text(prompt, model)
         return {"response": result}
+    
+    # Если модель для изображения
     elif model in image_models:
+        # Обработка умного промпта
+        if smart_prompt:
+            try:
+                smart_prompt_text = f"Напиши промпт для миджорни без лишних слов, сразу промпт. {prompt}"
+                prompt = generate_text(smart_prompt_text, "gpt-4o")
+                logging.info(f"Умный промпт: {prompt}")
+            except Exception as e:
+                logging.error(f"Ошибка умного промпта: {str(e)}")
+
         result = generate_image(prompt, model)
         return {"image_url": result}
+    
     else:
         raise HTTPException(status_code=400, detail="Ошибка выбора модели")
-
