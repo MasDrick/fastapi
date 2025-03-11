@@ -78,7 +78,8 @@ async def generate(prompt: str, model: str, smart_prompt: bool = False):
         # Обработка умного промпта
         if smart_prompt:
             try:
-                smart_prompt_text = f"Напиши промпт для миджорни без лишних слов, сразу промпт. {prompt}"
+                smart_prompt_text = f"Сформулируй качественный промпт для MidJourney. Не добавляй вступлений. Только готовый промпт. Используй стиль описания, принятый для MidJourney: конкретные объекты, художественные стили, атмосфера, освещение, ракурс, техника съёмки, дополнительные визуальные детали. Вот тема: {prompt}"
+
                 prompt = generate_text(smart_prompt_text, "gpt-4o")
                 logging.info(f"Умный промпт: {prompt}")
             except Exception as e:
