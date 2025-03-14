@@ -7,7 +7,7 @@ from g4f.client import Client
 
 app = FastAPI()
 
-# Настройка CORS
+# CORS
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -24,10 +24,26 @@ app.add_middleware(
 # Логирование
 logging.basicConfig(level=logging.INFO)
 
-# Доступные модели
 available_models = ["gpt-4o", "gpt-4o-mini", "deepseek-r1", "deepseek-v3", "evil", "flux", "dall-e-3", "midjourney"]
 image_models = ["flux", "dall-e-3", "midjourney"]
 text_models = [model for model in available_models if model not in image_models]
+
+# Перевод текста на английский (только для изображений)
+def translate_to_english(text: str) -> str:
+    try:
+        translation_prompt = [
+            {"role": "system", "content": "You are a professional translator. Translate everything into English without any comments or explanations."},
+            {"role": "user", "content": text}
+        ]
+        translation = g4f.ChatCompletion.create(
+            model="gpt-4o",
+            messages=translation_prompt,
+            stream=False
+        )
+        return translation if isinstance(translation, str) else str(translation)
+    except Exception as e:
+        logging.error(f"Ошибка перевода: {str(e)}")
+        return text  # fallback
 
 # Генерация текста
 def generate_text(prompt: str, model: str) -> str:
@@ -68,25 +84,35 @@ async def generate(prompt: str, model: str, smart_prompt: bool = False):
     if model not in available_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
 
-    # Если модель текстовая — просто вернуть ответ
+    # Текстовая модель — сразу отвечаем на русском
     if model in text_models:
         result = generate_text(prompt, model)
         return {"response": result}
-    
-    # Если модель для изображения
+
+    # Модель изображения — переводим промпт
     elif model in image_models:
-        # Обработка умного промпта
-        if smart_prompt:
-            try:
-                smart_prompt_text = f"Сформулируй качественный промпт для MidJourney. Не добавляй вступлений. Только готовый промпт. Вот тема: {prompt}"
+      used_prompt = prompt  # Сохраняем оригинальный prompt для случая smart_prompt=False
+      if smart_prompt:
+          try:
+              # Сначала переводим исходный prompt на английский
+              translated_topic = translate_to_english(prompt)
 
-                prompt = generate_text(smart_prompt_text, "gpt-4o")
-                logging.info(f"Умный промпт: {prompt}")
-            except Exception as e:
-                logging.error(f"Ошибка умного промпта: {str(e)}")
+              # Создаём "умный" prompt на английском
+              smart_prompt_text = f"Generate a detailed and high-quality MidJourney prompt based on this idea: {translated_topic}. Do not add any explanations or introduction. Only output the prompt."
+              prompt = generate_text(smart_prompt_text, "gpt-4o")
+              logging.info(f"Умный промпт: {prompt}")
+              used_prompt = prompt  # Обновляем, что именно отправили в генерацию
+          except Exception as e:
+              logging.error(f"Ошибка умного промпта: {str(e)}")
+      else:
+          prompt = translate_to_english(prompt)
+          used_prompt = prompt
 
-        result = generate_image(prompt, model)
-        return {"image_url": result}
-    
+      result = generate_image(prompt, model)
+      return {
+          "image_url": result,
+          "used_prompt": used_prompt  # <-- возвращаем, что именно было использовано
+      }
+
     else:
         raise HTTPException(status_code=400, detail="Ошибка выбора модели")
