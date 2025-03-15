@@ -78,6 +78,10 @@ def generate_image(prompt: str, model: str) -> str:
         logging.error(f"Ошибка генерации изображения: {str(e)}")
         return "Ошибка генерации изображения."
 
+
+@app.get("/")
+async def read_root():
+    return {"message": "Добро пожаловать на бекенд INSUGPT!"}
 # Эндпоинт генерации контента
 @app.post("/generate/")
 async def generate(prompt: str, model: str, smart_prompt: bool = False):
@@ -105,8 +109,7 @@ async def generate(prompt: str, model: str, smart_prompt: bool = False):
           except Exception as e:
               logging.error(f"Ошибка умного промпта: {str(e)}")
       else:
-          prompt = translate_to_english(prompt)
-          used_prompt = prompt
+          used_prompt = ''
 
       result = generate_image(prompt, model)
       return {
