@@ -4,6 +4,8 @@ import logging
 import random
 import g4f
 from g4f.client import Client
+import os
+import uvicorn
 
 app = FastAPI()
 
@@ -28,7 +30,6 @@ available_models = ["gpt-4o", "gpt-4o-mini", "deepseek-r1", "deepseek-v3", "evil
 image_models = ["flux", "dall-e-3", "midjourney"]
 text_models = [model for model in available_models if model not in image_models]
 
-# Перевод текста на английский (только для изображений)
 def translate_to_english(text: str) -> str:
     try:
         translation_prompt = [
@@ -43,9 +44,8 @@ def translate_to_english(text: str) -> str:
         return translation if isinstance(translation, str) else str(translation)
     except Exception as e:
         logging.error(f"Ошибка перевода: {str(e)}")
-        return text  # fallback
+        return text
 
-# Генерация текста
 def generate_text(prompt: str, model: str) -> str:
     system_message = {"role": "system", "content": "Пожалуйста, отвечай на русском языке, грамотно."}
     try:
@@ -63,7 +63,6 @@ def generate_text(prompt: str, model: str) -> str:
         logging.error(f"Ошибка генерации текста: {str(e)}")
         return "Не удалось получить ответ."
 
-# Генерация изображения
 def generate_image(prompt: str, model: str) -> str:
     try:
         client = Client()
@@ -78,44 +77,45 @@ def generate_image(prompt: str, model: str) -> str:
         logging.error(f"Ошибка генерации изображения: {str(e)}")
         return "Ошибка генерации изображения."
 
-
 @app.get("/")
 async def read_root():
     return {"message": "Добро пожаловать на бекенд INSUGPT!"}
-# Эндпоинт генерации контента
+
 @app.post("/generate/")
 async def generate(prompt: str, model: str, smart_prompt: bool = False):
     if model not in available_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
 
-    # Текстовая модель — сразу отвечаем на русском
     if model in text_models:
         result = generate_text(prompt, model)
         return {"response": result}
 
-    # Модель изображения — переводим промпт
     elif model in image_models:
-      used_prompt = prompt  # Сохраняем оригинальный prompt для случая smart_prompt=False
-      if smart_prompt:
-          try:
-              # Сначала переводим исходный prompt на английский
-              translated_topic = translate_to_english(prompt)
-
-              # Создаём "умный" prompt на английском
-              smart_prompt_text = f"Generate a detailed and high-quality MidJourney prompt based on this idea: {translated_topic}. Do not add any explanations or introduction. Only output the prompt."
-              prompt = generate_text(smart_prompt_text, "gpt-4o")
-              logging.info(f"Умный промпт: {prompt}")
-              used_prompt = prompt  # Обновляем, что именно отправили в генерацию
-          except Exception as e:
-              logging.error(f"Ошибка умного промпта: {str(e)}")
-      else:
-          used_prompt = ''
-
-      result = generate_image(prompt, model)
-      return {
-          "image_url": result,
-          "used_prompt": used_prompt  # <-- возвращаем, что именно было использовано
-      }
+        used_prompt = prompt
+        if smart_prompt:
+            try:
+                translated_topic = translate_to_english(prompt)
+                smart_prompt_text = f"Generate a detailed and high-quality MidJourney prompt based on this idea: {translated_topic}. Do not add any explanations or introduction. Only output the prompt."
+                prompt = generate_text(smart_prompt_text, "gpt-4o")
+                logging.info(f"Умный промпт: {prompt}")
+                used_prompt = prompt
+            except Exception as e:
+                logging.error(f"Ошибка умного промпта: {str(e)}")
+        
+        result = generate_image(prompt, model)
+        return {
+            "image_url": result,
+            "used_prompt": used_prompt
+        }
 
     else:
         raise HTTPException(status_code=400, detail="Ошибка выбора модели")
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        log_level="info"
+    )
