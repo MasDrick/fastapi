@@ -1,8 +1,7 @@
-fastapi==0.100.0
-hypercorn==0.14.4
-g4f==0.4.7.3
-python-dotenv==1.0.1
-python-docx==1.1.2
-logging==0.4.9.6
-mangum==0.14.0
-python-multipart==0.0.20
+fastapi
+uvicorn
+g4f>=0.4.7.3
+python-dotenv>=1.0.1
+python-docx>=1.1.2
+mangum>=0.14.0
+python-multipart>=0.0.20
