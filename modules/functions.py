@@ -1,35 +1,21 @@
 import logging
 import random
-
-import g4f
+import modules.constants as constants
 from g4f.client import Client
+from g4f.Provider import PollinationsAI
 
-
-def translate_to_english(text: str) -> str:
-    try:
-        translation_prompt = [
-            {"role": "system",
-             "content": "You are a professional translator. Translate everything into English without any comments or explanations."},
-            {"role": "user", "content": text}
-        ]
-        translation = g4f.ChatCompletion.create(
-            model="gpt-4o",
-            messages=translation_prompt,
-            stream=False
-        )
-        return translation if isinstance(translation, str) else str(translation)
-    except Exception as e:
-        logging.error(f"Ошибка перевода: {str(e)}")
-        return text
-
+client = Client(
+    provider=PollinationsAI,
+    api_key=constants.API_KEY
+)
 
 def generate_text(prompt: str, model: str) -> str:
     try:
-        response = g4f.ChatCompletion.create(
+        response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}]
         )
-        return response
+        return response.choices[0].message.content
     except Exception as e:
         logging.error(f"Ошибка генерации текста: {str(e)}")
         return "Не удалось получить ответ."
@@ -37,7 +23,6 @@ def generate_text(prompt: str, model: str) -> str:
 
 def generate_image(prompt: str, model: str) -> str:
     try:
-        client = Client()
         response = client.images.generate(
             model=model,
             prompt=prompt,

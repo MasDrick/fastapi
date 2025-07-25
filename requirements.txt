@@ -1,4 +1,4 @@
-fastapi
-uvicorn
-g4f>=0.4.7.3
-pydantic
+fastapi>=0.116.1
+uvicorn[standard]>=0.35.0
+g4f>=0.5.7.5
+pydantic>=2.11.7
