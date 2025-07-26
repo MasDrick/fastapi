@@ -5,6 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from modules import origins, api
+from modules.database.query_api import create_table
 
 app = FastAPI()
 app.add_middleware(
@@ -18,4 +19,5 @@ app.include_router(api.router)
 logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=10000, log_level="info")
+    create_table()
+    uvicorn.run("main:app", log_level="info")

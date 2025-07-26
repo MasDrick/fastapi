@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="app\modules\" />
+    <Folder Include="app\modules\database\" />
     <Folder Include="app\modules\__pycache__\" />
     <Folder Include="app\" />
   </ItemGroup>
@@ -50,6 +51,9 @@
     <Content Include="app\modules\__pycache__\__init__.cpython-310.pyc" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="app\modules\database\database.py" />
+    <Compile Include="app\modules\database\query_api.py" />
+    <Compile Include="app\modules\database\__init__.py" />
     <Compile Include="app\__init__.py" />
     <Compile Include="app\main.py" />
     <Compile Include="app\modules\api.py" />

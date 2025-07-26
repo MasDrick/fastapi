@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
+USER = os.getenv("USER")
+PASSWORD = os.getenv("PASSWORD")
+HOST = os.getenv("HOST")
+PORT = os.getenv("PORT")
+DBNAME = os.getenv("DBNAME")
 
 text_models = [
     "gpt-4", "gpt-4o", "gpt-4.1-mini", "gpt-4o-mini",

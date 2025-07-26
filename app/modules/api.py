@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Request
 import modules.constants as constants
 import modules.functions as functions
 import modules.classes as classes
+import modules.database.query_api as database
 
 router = APIRouter(
     prefix="/api",
