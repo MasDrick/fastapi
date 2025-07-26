@@ -4,8 +4,10 @@ import modules.constants as constants
 import modules.functions as functions
 import modules.classes as classes
 
-router = APIRouter(prefix="/api")
-
+router = APIRouter(
+    prefix="/api",
+    tags=["api"]
+)
 
 @router.get("/")
 def read_root():

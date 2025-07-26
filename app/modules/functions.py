@@ -2,7 +2,7 @@ import logging
 import random
 import modules.constants as constants
 from g4f.client import Client
-from g4f.Provider import PollinationsAI
+from g4f.Provider import PollinationsAI 
 
 client = Client(
     provider=PollinationsAI,
@@ -17,7 +17,7 @@ def generate_text(prompt: str, model: str) -> str:
         )
         return response.choices[0].message.content
     except Exception as e:
-        logging.error(f"Ошибка генерации текста: {str(e)}")
+        logging.error("Ошибка генерации текста: %s", e)
         return "Не удалось получить ответ."
 
 
@@ -31,5 +31,5 @@ def generate_image(prompt: str, model: str) -> str:
         )
         return response.data[0].url
     except Exception as e:
-        logging.error(f"Ошибка генерации изображения: {str(e)}")
+        logging.error("Ошибка генерации изображения: %s", e)
         return "Ошибка генерации изображения."
