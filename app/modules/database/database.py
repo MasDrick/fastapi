@@ -1,8 +1,10 @@
 import logging
 import psycopg2
 import enum
+
 from ..constants import USER, PASSWORD, HOST, PORT, DBNAME  
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from typing import Any
 
 class CommandSQL(enum.Enum):
     """Перечисление с типами запросов к БД"""
@@ -35,7 +37,7 @@ class Database(object):
     def get_cursor(self):
         return self.__connection.cursor()
 
-    def execute_sql(self, query: str, command: CommandSQL) -> list[tuple] | None:
+    def execute_sql(self, query: str, command: CommandSQL) -> list[tuple[Any, ...]] | None:
         try:
             cursor = self.get_cursor()
             cursor.execute(query)

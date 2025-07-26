@@ -19,7 +19,7 @@ def create_table():
     except Exception as e:
         logging.info("Таблица уже создана")
 
-def get_prompy_by_user(user_id: int, limit: int = 5, offset: int = 0) -> list[tuple[Any, ...]] | None:
+def get_prompt_by_user(user_id: int, limit: int = 5, offset: int = 0) -> list[tuple[Any, ...]] | None:
     query = f"""
         SELECT *
         FROM history_prompt
