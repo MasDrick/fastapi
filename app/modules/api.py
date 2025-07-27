@@ -41,5 +41,7 @@ def generate_image(
         used_prompt=prompt.used_prompt,
         response=response
     )
+    if len(answer.response.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Ответ есть, но кажется он пуст. Видимо модели нужен отдых, выбери пока другую")
     return answer
 
