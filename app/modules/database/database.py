@@ -1,9 +1,7 @@
 import logging
-import psycopg2
+import sqlite3
 import enum
-
-from ..constants import USER, PASSWORD, HOST, PORT, DBNAME  
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import os
 from typing import Any
 
 class CommandSQL(enum.Enum):
@@ -14,42 +12,50 @@ class CommandSQL(enum.Enum):
     SELECT = 4
 
 class Database(object):
-    """Класс для работы с БД (только PostgreSQL)"""
+    """Класс для работы с БД (только SQLite3)"""
     def __init__(self):
         try:
-            self.__connection = psycopg2.connect(
-                user=USER,
-                password=PASSWORD,
-                host=HOST,
-                port=PORT,
-                dbname=DBNAME
-            )
-            self.__connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        except (Exception, psycopg2.Error) as error:
+            db_path = os.path.abspath(os.path.join(
+                os.path.dirname(__file__), 
+                '..',  
+                '..',
+                '..',
+                '..',
+                'data',  
+                'database.db'  
+            ))
+            print(db_path)
+            self.__connection = sqlite3.connect(db_path)
+        except (Exception, sqlite3.Error) as error:
             logging.critical("Ошибка при создании объекта: %s", error)
             self.__connection = None
             
 
     def __del__(self):
-        if self.__connection:
-            self.__connection.close()
+        if self.__connection is not None:
+            try:
+                if self.__connection:
+                    self.__connection.close()
+            except Exception as e:
+                logging.error("Ошибка при закрытии соединения: %s", e)
 
-    def get_cursor(self):
+    def get_cursor(self) -> sqlite3.Cursor:
+        if self.__connection is None:
+            raise sqlite3.Error("Соединение с базой данных не установлено")
         return self.__connection.cursor()
 
-    def execute_sql(self, query: str, command: CommandSQL) -> list[tuple[Any, ...]] | None:
+    def execute_sql(self, query: str, parameters: tuple[Any], command: CommandSQL) -> list[Any] | None:
+        cursor = None
         try:
             cursor = self.get_cursor()
-            cursor.execute(query)
+            cursor.execute(query, parameters)
             match command:
                 case CommandSQL.SELECT:
                     record = cursor.fetchall()
                     return record
                 case _:
                     return None
-
-            return None
-        except (Exception, psycopg2.Error) as error:
+        except (Exception, sqlite3.Error) as error:
             logging.critical("Ошибка при выполнении запроса: %s", error)
         finally:
             if cursor:
