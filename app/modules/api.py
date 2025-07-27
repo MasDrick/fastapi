@@ -73,9 +73,9 @@ def generate_image(
 
 @router.get("/history_chat", response_model=list[classes.HistoryResponse])
 def get_history(
-    chat_type: str,
-    limit: int,
-    offset: int,
+    chat_type: str = "text",
+    limit: int = 5,
+    offset: int = 0,
     user_id: Optional[str] = Header(None)
 ) -> list[classes.HistoryResponse]:
     if not user_id:
