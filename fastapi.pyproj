@@ -26,18 +26,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Interpreter Include=".venv\">
-      <Id>.venv</Id>
-      <Version>3.10</Version>
-      <Description>.venv (Python 3.10 (64-bit))</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>X64</Architecture>
-    </Interpreter>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="app\modules\" />
+    <Folder Include="app\modules\database\" />
     <Folder Include="app\modules\__pycache__\" />
     <Folder Include="app\" />
   </ItemGroup>
@@ -50,6 +40,9 @@
     <Content Include="app\modules\__pycache__\__init__.cpython-310.pyc" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="app\modules\database\database.py" />
+    <Compile Include="app\modules\database\query_api.py" />
+    <Compile Include="app\modules\database\__init__.py" />
     <Compile Include="app\__init__.py" />
     <Compile Include="app\main.py" />
     <Compile Include="app\modules\api.py" />
@@ -58,6 +51,17 @@
     <Compile Include="app\modules\functions.py" />
     <Compile Include="app\modules\origins.py" />
     <Compile Include="app\modules\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include=".venv\">
+      <Id>.venv</Id>
+      <Version>3.10</Version>
+      <Description>.venv (Python 3.10 (64-bit))</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X64</Architecture>
+    </Interpreter>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
