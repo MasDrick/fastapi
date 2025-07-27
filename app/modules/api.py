@@ -23,7 +23,7 @@ def generate_text(
     user_id: Optional[str] = Header(None)
 ) -> classes.ResponsePrompt:
     if not user_id:
-        raise HTTPException(status_code=400, detail="Требуется user_id в загаловке")
+        raise HTTPException(status_code=400, detail="Требуется user_id в заголовке")
 
     if prompt.model not in constants.text_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
@@ -50,7 +50,7 @@ def generate_image(
     user_id: Optional[str] = Header(None)
 ) -> classes.ResponsePrompt:
     if not user_id:
-        raise HTTPException(status_code=400, detail="Требуется user_id в загаловке")
+        raise HTTPException(status_code=400, detail="Требуется user_id в заголовке")
 
     if prompt.model not in constants.image_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
