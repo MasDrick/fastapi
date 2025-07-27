@@ -25,7 +25,7 @@ class Database(object):
                 'database.db'  
             ))
             print(db_path)
-            self.__connection = sqlite3.connect(db_path)
+            self.__connection = sqlite3.connect(db_path, check_same_thread=False)
         except (Exception, sqlite3.Error) as error:
             logging.critical("Ошибка при создании объекта: %s", error)
             self.__connection = None
@@ -54,6 +54,7 @@ class Database(object):
                     record = cursor.fetchall()
                     return record
                 case _:
+                    self.__connection.commit()
                     return None
         except (Exception, sqlite3.Error) as error:
             logging.critical("Ошибка при выполнении запроса: %s", error)
