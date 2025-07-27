@@ -10,26 +10,20 @@ client = Client(
 )
 
 def generate_text(prompt: str, model: str) -> str:
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}]
-        )
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    if response is not None:
         return response.choices[0].message.content
-    except Exception as e:
-        logging.error("Ошибка генерации текста: %s", e)
-        return "Не удалось получить ответ."
+    raise Exception("От модели нет ответа")
 
 
 def generate_image(prompt: str, model: str) -> str:
-    try:
-        response = client.images.generate(
-            model=model,
-            prompt=prompt,
-            seed=random.randint(0, 10 ** 9),
-            response_format="url"
-        )
-        return response.data[0].url
-    except Exception as e:
-        logging.error("Ошибка генерации изображения: %s", e)
-        return "Ошибка генерации изображения."
+    response = client.images.generate(
+        model=model,
+        prompt=prompt,
+        seed=random.randint(0, 10 ** 9),
+        response_format="url"
+    )
+    return response.data[0].url
