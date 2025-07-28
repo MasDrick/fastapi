@@ -30,7 +30,7 @@ def get_prompt_by_user(user_id: int, chat_type: str = "text", limit: int = 5, of
     query = """
         SELECT *
         FROM history_prompt
-        WHERE id = ? AND request_type = ?
+        WHERE user_id = ? AND request_type = ?
         ORDER BY request_datetime
         LIMIT ?
         OFFSET ?
