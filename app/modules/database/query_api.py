@@ -21,6 +21,7 @@ def create_table():
     CREATE TABLE IF NOT EXISTS chats (
         chat_id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
+        chat_type TEXT CHECK (chat_type IN ('mixed', 'text', 'image')) NOT NULL DEFAULT 'mixed',
         chat_name TEXT DEFAULT 'Новый чат',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );""",
@@ -83,16 +84,20 @@ def create_message(chat_id: int, prompt: str, response: str, request_type: str) 
     """
     database.execute_sql(query, (chat_id, request_type, prompt, response, current_time_ekb.isoformat()), CommandSQL.INSERT)
 
-def create_chat(user_id: int, chat_name: str = "Новый чат") -> int:
+def create_chat(user_id: int, chat_name: str = "Новый чат", chat_type: str = "mixed") -> int:
     query = """
-        INSERT INTO chats (user_id, chat_name)
-        VALUES (?, ?)
+        INSERT INTO chats (user_id, chat_type, chat_name)
+        VALUES (?, ?, ?)
     """
-    database.execute_sql(query, (user_id, chat_name), CommandSQL.INSERT)
-       
-    query = "SELECT last_insert_rowid()" # Получаем ID созданного чата
-    result = database.execute_sql(query, (), CommandSQL.SELECT)
-    return result[0][0] if result else None
+    try:
+        database.execute_sql(query, (user_id, chat_type, chat_name), CommandSQL.INSERT)
+        
+        query = "SELECT last_insert_rowid()"  # Получаем ID созданного чата
+        result = database.execute_sql(query, (), CommandSQL.SELECT)
+        return result[0][0] if result else None
+    except Exception as e:
+        logging.error(f"Ошибка при создании чата: {e}")
+        return None
 
 def delete_chat(chat_id: int) -> bool:
     """
@@ -161,20 +166,34 @@ def del_model(user_id: int, model_name: str):
         logging.error(f"Ошибка при удалении модели: {e}")
         return False
 
-def get_chats_by_user(user_id: int) -> list[dict] | None:
+def get_chats_by_user(user_id: int, chat_type: str = None) -> list[dict]:
     """
-    Получает список чатов пользователя
+    Получает список чатов пользователя с возможной фильтрацией по типу
     """
     query = """
-        SELECT chat_id, chat_name, created_at
+        SELECT chat_id, chat_name, chat_type, created_at
         FROM chats
         WHERE user_id = ?
-        ORDER BY created_at DESC
     """
+    params = [user_id]
+    
+    if chat_type:
+        query += " AND chat_type = ?"
+        params.append(chat_type)
+    
+    query += " ORDER BY created_at DESC"
     
     try:
-        result = database.execute_sql(query, (user_id,), CommandSQL.SELECT)
-        return result
+        result = database.execute_sql(query, tuple(params), CommandSQL.SELECT)
+        return [
+            {
+                'chat_id': row[0],
+                'chat_type': row[2],
+                'chat_name': row[1],
+                'created_at': row[3]
+            }
+            for row in result
+        ] if result else []
     except Exception as e:
-        logging.error(f"Ошибка при получении чатов пользователя {user_id}: {e}")
-        return None
+        logging.error(f"Ошибка при получении чатов: {e}")
+        return []

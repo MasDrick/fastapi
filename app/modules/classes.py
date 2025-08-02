@@ -1,4 +1,11 @@
 from pydantic import BaseModel
+from typing import Optional
+import enum
+
+class ChatType(str, enum.Enum):
+    MIXED = 'mixed'
+    TEXT = 'text'
+    IMAGE = 'image'
 
 class Prompt(BaseModel):
     model: str
@@ -6,6 +13,7 @@ class Prompt(BaseModel):
 
 class Chat(BaseModel):
     chat_name: str
+    chat_type: Optional[ChatType] = ChatType.MIXED
 
 class ResponsePrompt(BaseModel):
     used_prompt: str
@@ -22,3 +30,4 @@ class HistoryResponse(BaseModel):
 class ChatResponse(BaseModel):
     id: int
     chat_name: str
+    chat_type: ChatType

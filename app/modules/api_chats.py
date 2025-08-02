@@ -1,7 +1,3 @@
-import logging
-
-import modules.constants as constants
-import modules.functions as functions
 import modules.classes as classes
 import modules.database.query_api as database
 
@@ -58,11 +54,12 @@ def add_chat(
     if not user_id:
         raise HTTPException(status_code=400, detail="Требуется user_id в заголовке")
     
-    chat_id = database.create_chat(user_id, chat.chat_name)
+    chat_id = database.create_chat(user_id, chat.chat_name, chat.chat_type)
 
     return classes.ChatResponse(
         id=chat_id,
-        chat_name=chat.chat_name
+        chat_name=chat.chat_name,
+        chat_type=chat.chat_type
     )
 
 @router.delete("/delete")

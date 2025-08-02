@@ -1,12 +1,7 @@
-import logging
-
 import modules.constants as constants
-import modules.functions as functions
-import modules.classes as classes
 import modules.database.query_api as database
 
-from fastapi import APIRouter, HTTPException, Header
-from typing import Optional
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(
     prefix="/favorite",

@@ -4,6 +4,7 @@ import modules.constants as constants
 import modules.functions as functions
 import modules.classes as classes
 import modules.database.query_api as database
+import modules.database.database as db
 
 from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
@@ -20,7 +21,11 @@ def generate_text(
 ) -> classes.ResponsePrompt:
     if not chat_id:
         raise HTTPException(status_code=400, detail="Требуется chat_id в заголовке")
-
+    
+    # Проверяем соответствие типа сообщения типу чата
+    if get_type(chat_id) == 'image':
+        raise HTTPException(status_code=500, detail=f"Чат {chat_id} поддерживает только изображения")
+    
     if prompt.model not in constants.text_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
 
@@ -48,6 +53,10 @@ def generate_image(
     if not chat_id:
         raise HTTPException(status_code=400, detail="Требуется chat_id в заголовке")
 
+    # Проверяем соответствие типа сообщения типу чата
+    if get_type(chat_id) == 'text':
+        raise HTTPException(status_code=500, detail=f"Чат {chat_id} поддерживает только текстовые сообщения")
+
     if prompt.model not in constants.image_models:
         raise HTTPException(status_code=400, detail="Неверная модель")
 
@@ -66,3 +75,17 @@ def generate_image(
         raise HTTPException(status_code=400, detail="Ответ есть, но кажется он пуст. Видимо модели нужен отдых, выбери пока другую")
     database.create_message(chat_id, answer.used_prompt, answer.response, "image")
     return answer
+
+def get_type(chat_id: str) -> str:
+    # Сначала проверяем тип чата
+    chat_info = database.database.execute_sql(
+        "SELECT chat_type FROM chats WHERE chat_id = ?",
+        (chat_id,),
+        db.CommandSQL.SELECT
+    )
+    
+    if not chat_info:
+        logging.error(f"Чат {chat_id} не найден")
+        return False
+        
+    return chat_info[0][0]
