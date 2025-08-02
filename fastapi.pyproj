@@ -40,6 +40,9 @@
     <Content Include="app\modules\__pycache__\__init__.cpython-310.pyc" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="app\modules\api_chats.py" />
+    <Compile Include="app\modules\api_generate.py" />
+    <Compile Include="app\modules\api_favorite.py" />
     <Compile Include="app\modules\database\database.py" />
     <Compile Include="app\modules\database\query_api.py" />
     <Compile Include="app\modules\database\__init__.py" />
